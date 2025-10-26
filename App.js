@@ -8,6 +8,7 @@ import { auth } from "./firebaseConfig";
 import Login from "./login";
 import Registro from "./registro";
 import Home from "./home";
+import RegistrarGasto from "./registrarGasto";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -41,11 +42,18 @@ export default function App() {
       <Stack.Navigator>
         {user ? (
           // 🔓 Usuario autenticado → ir a Home
-          <Stack.Screen
-            name="Home"
-            component={Home}
-            options={{ headerShown: false }}
-          />
+          <>
+            <Stack.Screen
+              name="Home"
+              component={Home}
+              options={{ headerShown: false }} />
+            <Stack.Screen
+              name="RegistrarGasto"
+              component={RegistrarGasto}
+              options={{ title: "Registrar gasto" }}
+            />
+          </>
+
         ) : (
           // 🔒 No autenticado → ir a Login
           <>
@@ -63,11 +71,11 @@ export default function App() {
         )}
       </Stack.Navigator>
 
-      
+
     </NavigationContainer>
 
-    
+
   );
 
-  
+
 }
