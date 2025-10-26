@@ -7,6 +7,7 @@ export default function RegisterScreen({ navigation }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
+    const [showConditions, setShowConditions] = useState(false);
 
     const handleRegister = async () => {
         if (!email || !password || !name) {
@@ -58,7 +59,16 @@ export default function RegisterScreen({ navigation }) {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
+                onFocus={() => setShowConditions(true)}   // 👈 cuando hace foco
+                onBlur={() => setShowConditions(false)}   // 👈 cuando sale del campo
             />
+            {showConditions && (
+                <View style={styles.conditionsBox}>
+                    <Text style={styles.condition}>• Mínimo 6 caracteres, máximo 12.</Text>
+                    <Text style={styles.condition}>• Al menos una mayúscula</Text>
+                    <Text style={styles.condition}>• Al menos un número</Text>
+                </View>
+            )}
             <Button title="Registrarme" onPress={handleRegister} color="#00b506ff" />
         </View>
     );

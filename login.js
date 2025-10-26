@@ -7,6 +7,7 @@ export default function LoginScreen({ navigation }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+
     const handleLogin = async () => {
         if (!email || !password) {
             Alert.alert("Error", "Por favor ingresa tu correo y contraseña");
@@ -15,7 +16,6 @@ export default function LoginScreen({ navigation }) {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            // ✅ No necesitas navegar manualmente: App.js detecta sesión activa y pasa a Home automáticamente
         } catch (error) {
             if (error.code === "auth/user-not-found") Alert.alert("Usuario no encontrado");
             else if (error.code === "auth/wrong-password") Alert.alert("Contraseña incorrecta");
@@ -49,7 +49,10 @@ export default function LoginScreen({ navigation }) {
                 secureTextEntry
             />
 
-            <Button title="Ingresar" onPress={handleLogin} color="#00b506ff" />
+            <Button title="Ingresar"
+                onPress={handleLogin}
+                color="#00b506ff"
+            />
 
             <View style={styles.footer}>
                 <TouchableOpacity onPress={() => navigation.navigate("Registro")}>

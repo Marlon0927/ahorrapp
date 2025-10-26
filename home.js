@@ -17,6 +17,13 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: "center", alignItems: "center" },
-    text: { fontSize: 20, marginBottom: 20 },
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    text: {
+        fontSize: 20,
+        marginBottom: 20
+    },
 });

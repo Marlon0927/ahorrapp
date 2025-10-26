@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
@@ -9,6 +10,7 @@ import Registro from "./registro";
 import Home from "./home";
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -60,6 +62,12 @@ export default function App() {
           </>
         )}
       </Stack.Navigator>
+
+      
     </NavigationContainer>
+
+    
   );
+
+  
 }
