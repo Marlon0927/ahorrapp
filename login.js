@@ -1,100 +1,108 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Button } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
 export default function Login({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor ingresa correo y contraseña");
-      return;
-    }
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert("Error", "Por favor ingresa correo y contraseña");
+            return;
+        }
 
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log("Inicio de sesión exitoso ✅");
-    } catch (error) {
-      console.error("Error al iniciar sesión:", error.message);
-      Alert.alert("Error", "Correo o contraseña incorrectos");
-    }
-  };
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            if (error.code === "auth/user-not-found") Alert.alert("Usuario no encontrado");
+            else if (error.code === "auth/wrong-password") Alert.alert("Contraseña incorrecta");
+            else Alert.alert("Error", error.message);
+        }
+    };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bienvenido a AhorrApp 💰</Text>
+    return (
+        <View style={styles.container}>
+            <View style={styles.logoContainer}>
+                <Image source={require("./assets/logo.jpg")} style={styles.logo} />
+            </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Correo electrónico"
-        placeholderTextColor="#aaa"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+            <Text style={styles.title}>Iniciar Sesión</Text>
+            <TextInput
+                style={styles.input}
+                placeholder="Correo electrónico"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+            />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        placeholderTextColor="#aaa"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+            <TextInput
+                style={styles.input}
+                placeholder="Contraseña"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+            />
+            <Button title="Ingresar"
+                onPress={handleLogin}
+                color="#00b506ff"
+            />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Iniciar sesión</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
-        <Text style={styles.link}>¿No tienes cuenta? Regístrate aquí</Text>
-      </TouchableOpacity>
-    </View>
-  );
+             <View style={styles.footer}>
+                <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
+                    <Text style={styles.link}> ¿Olvidaste la contraseña?</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={styles.footer}>
+                <Text>¿No tienes cuenta?</Text>
+                <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
+                    <Text style={styles.link}> Regístrate</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 30,
-  },
-  input: {
-    width: "100%",
-    height: 50,
-    borderColor: "#CBD5E1",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    backgroundColor: "#FFF",
-  },
-  button: {
-    backgroundColor: "#22C55E",
-    paddingVertical: 12,
-    borderRadius: 10,
-    width: "100%",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  link: {
-    marginTop: 15,
-    color: "#0284C7",
-    fontSize: 14,
-  },
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        //alignItems: "center",
+        padding: 30,
+        backgroundColor: "#ffffffff"
+    },
+     title: {
+        fontSize: 24,
+        fontWeight: "bold",
+        textAlign: "center",
+        marginBottom: 20
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 10
+    },
+     footer: {
+        flexDirection: "row",
+        justifyContent: "center",
+        marginTop: 20
+    },
+    link: {
+        color: "blue",
+        fontWeight: "bold",
+        color: "#00b506ff"
+    },
+    logoContainer: {
+        alignItems: "center",      // centra horizontalmente
+        justifyContent: "center",  // centra verticalmente
+        marginTop: 40,
+    },
+    logo: {
+        width: 150,
+        height: 150
+    },
 });

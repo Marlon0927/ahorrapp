@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert, Image } from "react-native";
+import { View, TextInput, Button, Text, StyleSheet, Alert, Platform, Image } from "react-native";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "./firebaseConfig";
@@ -10,9 +10,29 @@ export default function RegisterScreen({ navigation }) {
     const [name, setName] = useState("");
     const [showConditions, setShowConditions] = useState(false);
 
+    function showAlert(title, message) {
+        if (Platform.OS === "web") {
+            window.alert(`${title}\n\n${message}`);
+        } else {
+            Alert.alert(title, message);
+        }
+    }
+    const validarPassword = (password) => {
+        const regex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,12}$/;
+        return regex.test(password);
+    };
+
     const handleRegister = async () => {
         if (!email || !password || !name) {
-            Alert.alert("Error", "Por favor completa todos los campos");
+            showAlert("Error", "Por favor completa todos los campos");
+            return;
+        }
+
+        if (!validarPassword(password)) {
+            showAlert(
+                "Contraseña inválida",
+                "Debe tener entre 6 y 12 caracteres, al menos una mayúscula y un número."
+            );
             return;
         }
 
@@ -25,20 +45,30 @@ export default function RegisterScreen({ navigation }) {
             await updateProfile(user, { displayName: name });
 
             // 3️⃣ Guardar en Firestore
-      const registro = {
-        uid: user.uid,         // guardar el uid del usuario
-        email: email,
-        name: name,
-        createdAt: new Date(), // opcional: fecha de registro
-      };
+            const registro = {
+                uid: user.uid,         // guardar el uid del usuario
+                email: email,
+                name: name,
+                createdAt: new Date(), // opcional: fecha de registro
+            };
 
-      await setDoc(doc(db, "users", user.uid), registro); // guarda el documento
+            await setDoc(doc(db, "users", user.uid), registro); // guarda el documento
 
-            Alert.alert("Registro exitoso", `Bienvenido, ${name}!`);
+            showAlert("Registro exitoso", `Bienvenido, ${name}!`);
             navigation.navigate("Login"); // o a tu pantalla principal
         } catch (error) {
             console.error(error);
-            Alert.alert("Error", error.message);
+            let mensajeError = "Ocurrió un error al registrarte";
+
+            if (error.code === "auth/email-already-in-use") {
+                mensajeError = "El correo ya está registrado";
+            } else if (error.code === "auth/invalid-email") {
+                mensajeError = "El formato del correo es inválido";
+            } else if (error.code === "auth/weak-password") {
+                mensajeError = "La contraseña es muy débil (mínimo 6 caracteres)";
+            }
+
+            showAlert("Error", mensajeError);
         }
     };
 
