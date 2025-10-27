@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, Text, StyleSheet, Alert, Image } from "react-native";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "./firebaseConfig";
+import { doc, setDoc } from "firebase/firestore"
+import { auth, db } from "./firebaseConfig";
 
 export default function RegisterScreen({ navigation }) {
     const [email, setEmail] = useState("");
@@ -22,6 +23,16 @@ export default function RegisterScreen({ navigation }) {
 
             // 2️⃣ Agregar nombre al perfil
             await updateProfile(user, { displayName: name });
+
+            // 3️⃣ Guardar en Firestore
+      const registro = {
+        uid: user.uid,         // guardar el uid del usuario
+        email: email,
+        name: name,
+        createdAt: new Date(), // opcional: fecha de registro
+      };
+
+      await setDoc(doc(db, "users", user.uid), registro); // guarda el documento
 
             Alert.alert("Registro exitoso", `Bienvenido, ${name}!`);
             navigation.navigate("Login"); // o a tu pantalla principal

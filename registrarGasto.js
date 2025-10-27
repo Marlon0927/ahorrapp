@@ -1,74 +1,103 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert, Picker } from "react-native";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "./firebaseConfig";
+import { View, TextInput, Button, Text, StyleSheet, Alert } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "./firebaseConfig";
 
-export default function RegisterScreen({ navigation }) {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
-    const [categoria, setCategoria] = useState("");
-    const [selectedValue, setSelectedValue] = useState("");
+export default function RegisterBillsScreen({ navigation }) {
+    const [title, setTitle] = useState("");
+    const [value, setValue] = useState("");
+    const [category, setCategory] = useState("");
+    const [notes, setNotes] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
     const handleRegister = async () => {
-        if (!email || !password || !name) {
+        if (!title || !value || !category) {
             Alert.alert("Error", "Por favor completa todos los campos");
             return;
         }
 
         try {
-            // 1️⃣ Crear usuario con email y contraseña
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
+            const user = auth.currentUser;
+            if (!user) {
+                Alert.alert("Error", "Debes iniciar sesión para registrar un gasto");
+                return;
+            }
 
-            // 2️⃣ Agregar nombre al perfil
-            await updateProfile(user, { displayName: name });
+            const expense = {
+                userId: user.uid,
+                title: title,
+                value: parseFloat(value),
+                category: category,
+                notes: notes || "",
+                createdAt: serverTimestamp(),
+            };
 
-            Alert.alert("Registro exitoso", `Bienvenido, ${name}!`);
-            navigation.navigate("Login"); // o a tu pantalla principal
+            await addDoc(collection(db, "expenses"), expense);
+
+            setSuccessMessage("✅ Gasto guardado correctamente");
+
+            setTitle("");
+            setValue("");
+            setCategory("");
+            setNotes("");
+
+            setTimeout(() => {
+                setSuccessMessage("");
+                navigation.goBack();
+            }, 3000);
+
         } catch (error) {
-            console.error(error);
+            console.error("🔥 Error al guardar en Firestore:", error);
             Alert.alert("Error", error.message);
         }
     };
-
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Registrar gasto</Text>
-            <Text style={styles.subtitle}>Nombre</Text>
+            <Text style={styles.title}>Registrar Gastos</Text>
+
+            <Text style={styles.label}>Titulo</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Nombre"
-                value={name}
-                onChangeText={setName}
+                placeholder="Ejemplo: Almuerzo"
+                value={title}
+                onChangeText={setTitle}
             />
-            <Text style={styles.subtitle}>Valor</Text>
+
+            <Text style={styles.label}>Valor</Text>
             <TextInput
                 style={styles.input}
-                placeholder="$ Valor"
-                value={email}
-                onChangeText={setEmail}
+                placeholder="$ valor"
+                value={value}
+                onChangeText={setValue}
+                keyboardType="numeric"
             />
-            <Text style={styles.subtitle}>Categoria</Text>
+
+            <Text style={styles.label}>Categoria</Text>
             <Picker
-                selectedValue={categoria}
+                selectedValue={category}
                 style={styles.picker}
-                onValueChange={(itemValue) => setCategoria(itemValue)}
+                onValueChange={(itemValue) => setCategory(itemValue)}
             >
-                <Picker.Item label="Alimentacion" value="alimentacion" />
-                <Picker.Item label="Vivienda" value="vivienda" />
-                <Picker.Item label="Transporte" value="transporte" />
-                <Picker.Item label="Servicio" value="servicio" />
-                <Picker.Item label="Otros" value="otros" />
+                <Picker.Item label="Selecciona una categoría" value="" />
+                <Picker.Item label="Comida" value="food" />
+                <Picker.Item label="Vivienda" value="housing" />
+                <Picker.Item label="Transporte" value="transportation" />
+                <Picker.Item label="Servicios" value="services" />
+                <Picker.Item label="Otros" value="others" />
             </Picker>
-            <Text style={styles.subtitle}>Observaciones: {categoria}</Text>
+
+            <Text style={styles.label}>Observaciones</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Observaciones"
-                value={password}
-                onChangeText={setPassword}
+                placeholder="Agrega una observación (opcional)"
+                value={notes}
+                onChangeText={setNotes}
             />
-            <Button title="Registrar gasto" onPress={handleRegister} color="#00b506ff" />
+            {successMessage ? (
+                <Text style={styles.successMessage}>{successMessage}</Text>
+            ) : null}
+            <Button title="Guardar Gasto" onPress={handleRegister} color="#00b506ff" />
         </View>
     );
 }
@@ -116,6 +145,13 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         height: 40,
         width: "100%"
+    },
+    successMessage: {
+        color: "green",
+        textAlign: "center",
+        fontWeight: "bold",
+        marginBottom: 10,
+        fontSize: 16,
     },
 
 });
