@@ -19,6 +19,7 @@ export default function RegisterScreen({ navigation }) {
             // 1️⃣ Crear usuario con email y contraseña
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            console.log("prueba");
 
             // 2️⃣ Agregar nombre al perfil
             await updateProfile(user, { displayName: name });
