@@ -1,16 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Button } from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 
-export default function LoginScreen({ navigation }) {
+export default function Login({ navigation }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-
     const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert("Error", "Por favor ingresa tu correo y contraseña");
+            Alert.alert("Error", "Por favor ingresa correo y contraseña");
             return;
         }
 
@@ -24,37 +23,34 @@ export default function LoginScreen({ navigation }) {
     };
 
     return (
-
         <View style={styles.container}>
             <View style={styles.logoContainer}>
                 <Image source={require("./assets/logo.jpg")} style={styles.logo} />
             </View>
 
             <Text style={styles.title}>Iniciar Sesión</Text>
-
             <TextInput
+                style={styles.input}
                 placeholder="Correo electrónico"
                 value={email}
                 onChangeText={setEmail}
-                style={styles.input}
                 keyboardType="email-address"
                 autoCapitalize="none"
             />
 
             <TextInput
+                style={styles.input}
                 placeholder="Contraseña"
                 value={password}
                 onChangeText={setPassword}
-                style={styles.input}
                 secureTextEntry
             />
-
             <Button title="Ingresar"
                 onPress={handleLogin}
                 color="#00b506ff"
             />
 
-            <View style={styles.footer}>
+             <View style={styles.footer}>
                 <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
                     <Text style={styles.link}> ¿Olvidaste la contraseña?</Text>
                 </TouchableOpacity>
@@ -77,7 +73,7 @@ const styles = StyleSheet.create({
         padding: 30,
         backgroundColor: "#ffffffff"
     },
-    title: {
+     title: {
         fontSize: 24,
         fontWeight: "bold",
         textAlign: "center",
@@ -90,7 +86,7 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 10
     },
-    footer: {
+     footer: {
         flexDirection: "row",
         justifyContent: "center",
         marginTop: 20
