@@ -14,7 +14,26 @@ export default function Login({ navigation }) {
         }
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            // 1️⃣ Crear usuario con email y contraseña
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            console.log("prueba");
+
+            // 2️⃣ Agregar nombre al perfil
+            await updateProfile(user, { displayName: name });
+
+            // 3️⃣ Guardar en Firestore
+            const registro = {
+                uid: user.uid,         // guardar el uid del usuario
+                email: email,
+                name: name,
+                createdAt: new Date(), // opcional: fecha de registro
+            };
+
+            await setDoc(doc(db, "users", user.uid), registro); // guarda el documento
+
+            showAlert("Registro exitoso", `Bienvenido, ${name}!`);
+            navigation.navigate("Login"); // o a tu pantalla principal
         } catch (error) {
             if (error.code === "auth/user-not-found") Alert.alert("Usuario no encontrado");
             else if (error.code === "auth/wrong-password") Alert.alert("Contraseña incorrecta");
