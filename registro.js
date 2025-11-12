@@ -1,74 +1,24 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert, Platform, Image } from "react-native";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore"
-import { auth, db } from "./firebaseConfig";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Button } from "react-native";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "./firebaseConfig";
 
-export default function RegisterScreen({ navigation }) {
+export default function Login({ navigation }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
-    const [showConditions, setShowConditions] = useState(false);
 
-    function showAlert(title, message) {
-        if (Platform.OS === "web") {
-            window.alert(`${title}\n\n${message}`);
-        } else {
-            Alert.alert(title, message);
-        }
-    }
-    const validarPassword = (password) => {
-        const regex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,12}$/;
-        return regex.test(password);
-    };
-
-    const handleRegister = async () => {
-        if (!email || !password || !name) {
-            showAlert("Error", "Por favor completa todos los campos");
-            return;
-        }
-
-        if (!validarPassword(password)) {
-            showAlert(
-                "Contraseña inválida",
-                "Debe tener entre 6 y 12 caracteres, al menos una mayúscula y un número."
-            );
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert("Error", "Por favor ingresa correo y contraseña");
             return;
         }
 
         try {
-            // 1️⃣ Crear usuario con email y contraseña
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            // 2️⃣ Agregar nombre al perfil
-            await updateProfile(user, { displayName: name });
-
-            // 3️⃣ Guardar en Firestore
-            const registro = {
-                uid: user.uid,         // guardar el uid del usuario
-                email: email,
-                name: name,
-                createdAt: new Date(), // opcional: fecha de registro
-            };
-
-            await setDoc(doc(db, "users", user.uid), registro); // guarda el documento
-
-            showAlert("Registro exitoso", `Bienvenido, ${name}!`);
-            navigation.navigate("Login"); // o a tu pantalla principal
+            await signInWithEmailAndPassword(auth, email, password);
         } catch (error) {
-            console.error(error);
-            let mensajeError = "Ocurrió un error al registrarte";
-
-            if (error.code === "auth/email-already-in-use") {
-                mensajeError = "El correo ya está registrado";
-            } else if (error.code === "auth/invalid-email") {
-                mensajeError = "El formato del correo es inválido";
-            } else if (error.code === "auth/weak-password") {
-                mensajeError = "La contraseña es muy débil (mínimo 6 caracteres)";
-            }
-
-            showAlert("Error", mensajeError);
+            if (error.code === "auth/user-not-found") Alert.alert("Usuario no encontrado");
+            else if (error.code === "auth/wrong-password") Alert.alert("Contraseña incorrecta");
+            else Alert.alert("Error", error.message);
         }
     };
 
@@ -77,40 +27,40 @@ export default function RegisterScreen({ navigation }) {
             <View style={styles.logoContainer}>
                 <Image source={require("./assets/logo.jpg")} style={styles.logo} />
             </View>
-            <Text style={styles.title}>Crear Cuenta</Text>
-            <Text style={styles.subtitle}>Nombre</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Nombre"
-                value={name}
-                onChangeText={setName}
-            />
-            <Text style={styles.subtitle}>Email</Text>
+
+            <Text style={styles.title}>Iniciar Sesión</Text>
             <TextInput
                 style={styles.input}
                 placeholder="Correo electrónico"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
+                autoCapitalize="none"
             />
-            <Text style={styles.subtitle}>Contraseña</Text>
+
             <TextInput
                 style={styles.input}
                 placeholder="Contraseña"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                onFocus={() => setShowConditions(true)}   // 👈 cuando hace foco
-                onBlur={() => setShowConditions(false)}   // 👈 cuando sale del campo
             />
-            {showConditions && (
-                <View style={styles.conditionsBox}>
-                    <Text style={styles.condition}>• Mínimo 6 caracteres, máximo 12.</Text>
-                    <Text style={styles.condition}>• Al menos una mayúscula</Text>
-                    <Text style={styles.condition}>• Al menos un número</Text>
-                </View>
-            )}
-            <Button title="Registrarme" onPress={handleRegister} color="#00b506ff" />
+            <Button title="Ingresar"
+                onPress={handleLogin}
+                color="#00b506ff"
+            />
+
+             <View style={styles.footer}>
+                <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
+                    <Text style={styles.link}> ¿Olvidaste la contraseña?</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={styles.footer}>
+                <Text>¿No tienes cuenta?</Text>
+                <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
+                    <Text style={styles.link}> Regístrate</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
@@ -119,27 +69,32 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: "center",
-        padding: 20,
+        //alignItems: "center",
+        padding: 30,
         backgroundColor: "#ffffffff"
     },
-    title: {
+     title: {
         fontSize: 24,
         fontWeight: "bold",
         textAlign: "center",
-        marginBottom: 20,
-    },
-    subtitle: {
-        fontSize: 18,
-        fontWeight: "bold",
-        textAlign: "left",
-        marginBottom: 20,
+        marginBottom: 20
     },
     input: {
         borderWidth: 1,
         borderColor: "#ccc",
         borderRadius: 8,
         padding: 10,
-        marginBottom: 10,
+        marginBottom: 10
+    },
+     footer: {
+        flexDirection: "row",
+        justifyContent: "center",
+        marginTop: 20
+    },
+    link: {
+        color: "blue",
+        fontWeight: "bold",
+        color: "#00b506ff"
     },
     logoContainer: {
         alignItems: "center",      // centra horizontalmente

@@ -15,6 +15,7 @@ export default function HomeScreen() {
             <Text style={styles.text}>Bienvenido 🎉</Text>
             <Button title="Cerrar sesión" onPress={handleLogout} />
             <Button title="Registrar gasto" onPress={() => navigation.navigate("RegistrarGasto")} />
+            <Button title="Registrar meta" onPress={() => navigation.navigate("RegistrarMeta")} />
         </View>
     );
 }

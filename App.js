@@ -9,6 +9,7 @@ import Login from "./login";
 import Registro from "./registro";
 import Home from "./home";
 import RegistrarGasto from "./registrarGasto";
+import RegistrarMeta from "./registrarMeta";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -51,6 +52,11 @@ export default function App() {
               name="RegistrarGasto"
               component={RegistrarGasto}
               options={{ title: "Registrar gasto" }}
+            />
+            <Stack.Screen
+              name="RegistrarMeta"
+              component={RegistrarMeta}
+              options={{ title: "Registrar meta" }}
             />
           </>
 
