@@ -3,6 +3,7 @@ import { View, Text, Button, StyleSheet } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 import { signOut } from "firebase/auth";
 import { auth } from "./firebaseConfig";
+import Dashboard from "./components/dashboard";
 
 export default function HomeScreen() {
     const handleLogout = async () => {
@@ -11,19 +12,16 @@ export default function HomeScreen() {
     const navigation = useNavigation();
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.text}>Bienvenido 🎉</Text>
-            <Button title="Cerrar sesión" onPress={handleLogout} />
-            <Button title="Registrar gasto" onPress={() => navigation.navigate("RegistrarGasto")} />
-        </View>
+        <Dashboard
+            onLogout={handleLogout}
+            onAddExpense={() => navigation.navigate("RegistrarGasto")}
+        />
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
+        flex: 1
     },
     text: {
         fontSize: 20,
