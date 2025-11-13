@@ -1,8 +1,10 @@
-import React from "react";
+//import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
+import VerMetas from "../verMetas";
 
-export default function Dashboard({ onLogout, onAddExpense }) {
+export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas}) {
     const pieData = [
         { value: 43, color: "#FFA000", text: "43%" },
         { value: 24, color: "#1E88E5", text: "24%" },
@@ -22,6 +24,10 @@ export default function Dashboard({ onLogout, onAddExpense }) {
         { amount: "$509.00", label: "Servicios", dot: "#FF7043", icon: "💡" },
         { amount: "$19,343.00", label: "Vivienda", dot: "#FFA000", icon: "🏠" }
     ];
+
+    const [visible, setVisible] = useState(false);
+
+    const toggleMenu = () => setVisible(!visible);
 
     return (
         <View style={styles.screen}>
@@ -80,12 +86,30 @@ export default function Dashboard({ onLogout, onAddExpense }) {
                     <Text style={styles.tabIcon}>⚪</Text>
                     <Text style={[styles.tabText, styles.tabTextActive]}>Home</Text>
                 </View>
-                <View style={styles.tabItem}>
-                    <Text style={styles.tabIcon}>☰</Text>
-                    <Text style={styles.tabText}>Menu</Text>
-                </View>
+
+
+                <TouchableOpacity style={styles.tabItem} onPress={toggleMenu}>
+                    <View style={styles.tabItem}>
+                        <Text style={styles.tabIcon}>☰</Text>
+                        <Text style={styles.tabText}>Menu</Text>
+                    </View>
+                </TouchableOpacity>
+                {/* Menú desplegable */}
+                {visible && (
+                    <View style={styles.dropdown}>
+                        <TouchableOpacity style={styles.dropdownItem}>
+                            <Text>Perfil</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.dropdownItem} onPress={onAddGoal}>
+                            <Text>Registar Meta</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.dropdownItem} onPress={verMetas}>
+                            <Text>Lista de metas</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
-        </View>
+        </View >
     );
 }
 
@@ -197,5 +221,21 @@ const styles = StyleSheet.create({
     tabTextActive: {
         color: "#000000",
         fontWeight: "700"
+    },
+    dropdown: {
+        position: "absolute",
+        bottom: 50, // 👈 se ubica encima del botón
+        left: 280,
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        padding: 5,
+        zIndex: 1,
+    },
+    dropdownItem: {
+        padding: 10,
     }
 });

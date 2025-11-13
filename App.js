@@ -10,6 +10,8 @@ import Registro from "./registro";
 import Home from "./home";
 import RegistrarGasto from "./registrarGasto";
 import RegistrarMeta from "./registrarMeta";
+import VerMetas from "./verMetas";
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -57,6 +59,11 @@ export default function App() {
               name="RegistrarMeta"
               component={RegistrarMeta}
               options={{ title: "Registrar meta" }}
+            />
+            <Stack.Screen
+              name="VerMetas"
+              component={VerMetas}
+              options={{ title: "Ver meta" }}
             />
           </>
 

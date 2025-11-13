@@ -31,7 +31,7 @@ export default function RegisterBillsScreen({ navigation }) {
 
             await addDoc(collection(db, "goals"), expense);
 
-            setSuccessMessage("✅ Gasto guardado correctamente");
+            setSuccessMessage("✅ Meta guardada correctamente");
 
             setTitle("");
             setValue("");
@@ -48,7 +48,7 @@ export default function RegisterBillsScreen({ navigation }) {
     };
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Registrar Gastos</Text>
+            <Text style={styles.title}>Registrar Meta</Text>
 
             <Text style={styles.label}>Titulo</Text>
             <TextInput

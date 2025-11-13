@@ -15,6 +15,8 @@ export default function HomeScreen() {
         <Dashboard
             onLogout={handleLogout}
             onAddExpense={() => navigation.navigate("RegistrarGasto")}
+            onAddGoal={() => navigation.navigate("RegistrarMeta")}
+            verMetas={() => navigation.navigate("VerMetas")}
         />
     );
 }
