@@ -4,7 +4,6 @@ import { PieChart } from 'react-native-gifted-charts';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebaseConfig';
 
-
 const CATEGORY_MAP = {
     food: { color: '#FFC107', label: 'Alimentación', icon: '🍽️' },
     housing: { color: '#FFA000', label: 'Vivienda', icon: '🏠' },
@@ -16,24 +15,22 @@ const CATEGORY_MAP = {
 const DEFAULT_COLOR = '#9E9E9E';
 const DEFAULT_ICON = '❓';
 
-
 const getColor = (category) => CATEGORY_MAP[category]?.color || DEFAULT_COLOR;
 const getLabel = (category) => CATEGORY_MAP[category]?.label || category;
 const getIcon = (category) => CATEGORY_MAP[category]?.icon || DEFAULT_ICON;
 
-
-
 export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas, perfil, verGastos }) {
+
     const [gastos, setGastos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [visible, setVisible] = useState(false);
 
-
+    // Total de gastos
     const totalGastos = useMemo(() => {
         return gastos.reduce((sum, g) => sum + Number(g.value || 0), 0);
     }, [gastos]);
 
-
+    // Agrupar por categoría
     const { pieData, categories } = useMemo(() => {
 
         const grouped = gastos.reduce((acc, gasto) => {
@@ -43,7 +40,7 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas,
             return acc;
         }, {});
 
-        const total = totalGastos;
+        const total = totalGastos || 1; // evita división por cero
 
         const pieArray = Object.keys(grouped)
             .filter((key) => grouped[key] > 0)
@@ -65,6 +62,13 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas,
         return { pieData: pieArray, categories: catArray };
     }, [gastos, totalGastos]);
 
+    // 🔥 CORRECCIÓN: PieChart no acepta array vacío
+    const safePieData = pieData.length > 0
+        ? pieData
+        : [
+            { value: 1, color: '#E0E0E0', text: '0%' }
+        ];
+
     const toggleMenu = () => setVisible(!visible);
 
     useEffect(() => {
@@ -74,17 +78,22 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas,
 
         const q = query(collection(db, 'expenses'), where('userId', '==', auth.currentUser.uid));
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            setGastos(data);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error al obtener gastos:", error);
-            setLoading(false);
-        });
+        const unsubscribe = onSnapshot(
+            q,
+            (snapshot) => {
+                const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+                setGastos(data);
+                setLoading(false);
+            },
+            (error) => {
+                console.error("Error al obtener gastos:", error);
+                setLoading(false);
+            }
+        );
 
         return () => unsubscribe();
     }, []);
+
     if (loading) {
         return (
             <View style={styles.centered}>
@@ -93,9 +102,11 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas,
             </View>
         );
     }
+
     return (
         <View style={styles.screen}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
+
                 {/* Header */}
                 <View style={styles.headerRow}>
                     <Text style={styles.title}>Inicio</Text>
@@ -104,10 +115,10 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas,
                     </TouchableOpacity>
                 </View>
 
-                {/* Gráfico de Pastel */}
+                {/* Pie Chart */}
                 <View style={styles.chartCard}>
                     <PieChart
-                        data={pieData}
+                        data={safePieData}
                         donut
                         showText
                         textColor="black"
@@ -121,7 +132,9 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas,
                         centerLabelComponent={() => (
                             <View style={{ alignItems: 'center' }}>
                                 <Text style={{ fontSize: 14, color: '#9E9E9E' }}>Gasto</Text>
-                                <Text style={{ fontSize: 20, fontWeight: '700' }}>${totalGastos.toLocaleString()}</Text>
+                                <Text style={{ fontSize: 20, fontWeight: '700' }}>
+                                    ${totalGastos.toLocaleString()}
+                                </Text>
                             </View>
                         )}
                     />
@@ -129,49 +142,51 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas,
 
                 {/* Tarjetas de Categorías */}
                 <View style={styles.grid}>
-                    {categories.map((c, idx) => (
-                        <View key={idx} style={styles.card}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                <Text style={styles.amount}>{c.amount}</Text>
+                    {categories.length === 0 ? (
+                        <Text style={{ textAlign: 'center', width: '100%', color: '#777', marginTop: 10 }}>
+                            No hay gastos registrados aún.
+                        </Text>
+                    ) : (
+                        categories.map((c, idx) => (
+                            <View key={idx} style={styles.card}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                    <Text style={styles.amount}>{c.amount}</Text>
+                                </View>
+                                <View style={styles.subtitleRow}>
+                                    <Text style={styles.icon}>{c.icon}</Text>
+                                    <Text style={styles.subtitle}>{c.label}</Text>
+                                    <View style={[styles.dot, { backgroundColor: c.dot }]} />
+                                </View>
                             </View>
-                            <View style={styles.subtitleRow}>
-                                <Text style={styles.icon}>{c.icon}</Text>
-                                <Text style={styles.subtitle}>{c.label}</Text>
-                                <View style={[styles.dot, { backgroundColor: c.dot }]} />
-                            </View>
-                        </View>
-                    ))}
+                        ))
+                    )}
                 </View>
             </ScrollView>
 
-            {/* Tabbar y Menú Desplegable */}
+            {/* Tabbar y Menú */}
             <View style={styles.tabbar}>
-                {/* Registrar Gasto */}
                 <TouchableOpacity style={styles.tabItem} onPress={onAddExpense}>
-                    <Text style={styles.tabIcon}>✅</Text>
+                    <Text style={styles.tabIcon}>💸</Text>
                     <Text style={styles.tabText}>Registrar gasto</Text>
                 </TouchableOpacity>
 
-                {/* Home Activo */}
                 <View style={[styles.tabItem, styles.tabActive]}>
-                    <Text style={styles.tabIcon}>⚪</Text>
+                    <Text style={styles.tabIcon}>🏠</Text>
                     <Text style={[styles.tabText, styles.tabTextActive]}>Home</Text>
                 </View>
 
-                {/* Botón de Menú */}
                 <TouchableOpacity style={styles.tabItem} onPress={toggleMenu}>
                     <Text style={styles.tabIcon}>☰</Text>
                     <Text style={styles.tabText}>Menu</Text>
                 </TouchableOpacity>
 
-                {/* Menú Desplegable */}
                 {visible && (
                     <View style={styles.dropdown}>
                         <TouchableOpacity style={styles.dropdownItem} onPress={perfil}>
                             <Text>Perfil</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.dropdownItem} onPress={onAddGoal}>
-                            <Text>Registar Meta</Text>
+                            <Text>Registrar Meta</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.dropdownItem} onPress={verMetas}>
                             <Text>Lista de metas</Text>
@@ -186,63 +201,32 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas,
     );
 }
 
+// ==== ESTILOS ====
 
 const styles = StyleSheet.create({
+    screen: { flex: 1, backgroundColor: '#FAFAFA' },
+    scrollContent: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 100 },
+    centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' },
 
-    screen: {
-        flex: 1,
-        backgroundColor: '#FAFAFA'
-    },
-    scrollContent: {
-        paddingHorizontal: 16,
-        paddingTop: 24,
-        paddingBottom: 100
-    },
-    centered: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#FAFAFA'
-    },
-
-
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 12
-    },
-    title: {
-        fontSize: 32,
-        color: '#2ECC40',
-        fontWeight: '700'
-    },
-    dropBtn: {
-        backgroundColor: '#E0E0E0',
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 10
-    },
-    dropText: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: '#616161'
-    },
-
+    headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+    title: { fontSize: 32, color: '#2ECC40', fontWeight: '700' },
+    dropBtn: { backgroundColor: '#E0E0E0', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+    dropText: { fontSize: 12, fontWeight: '700', color: '#616161' },
 
     chartCard: {
         backgroundColor: '#EEEEEE',
         borderRadius: 14,
         alignItems: 'center',
         paddingVertical: 20,
-        marginBottom: 16
+        marginBottom: 16,
     },
+
     grid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginBottom: 12
     },
+
     card: {
         width: '48.2%',
         backgroundColor: '#FFFFFF',
@@ -255,29 +239,12 @@ const styles = StyleSheet.create({
         elevation: 2,
         marginBottom: 10,
     },
-    amount: {
-        fontSize: 18,
-        fontWeight: '700'
-    },
-    subtitleRow: {
-        marginTop: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-    },
-    icon: {
-        fontSize: 16,
-        marginRight: 8
-    },
-    subtitle: {
-        color: '#616161',
-        flex: 1
-    },
-    dot: {
-        width: 14,
-        height: 14,
-        borderRadius: 7
-    },
+
+    amount: { fontSize: 18, fontWeight: '700' },
+    subtitleRow: { marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    icon: { fontSize: 16, marginRight: 8 },
+    subtitle: { color: '#616161', flex: 1 },
+    dot: { width: 14, height: 14, borderRadius: 7 },
 
     // Tabbar
     tabbar: {
@@ -291,29 +258,13 @@ const styles = StyleSheet.create({
         paddingBottom: 14,
         flexDirection: 'row',
         justifyContent: 'space-around',
-        alignItems: 'center'
-    },
-    tabItem: {
         alignItems: 'center',
-        width: '30%',
-        paddingVertical: 4
-    },
-    tabActive: {
-
-    },
-    tabIcon: {
-        fontSize: 22,
-        marginBottom: 4
-    },
-    tabText: {
-        fontSize: 12,
-        color: '#616161'
-    },
-    tabTextActive: {
-        color: '#000000',
-        fontWeight: '700'
     },
 
+    tabItem: { alignItems: 'center', width: '30%', paddingVertical: 4 },
+    tabIcon: { fontSize: 22, marginBottom: 4 },
+    tabText: { fontSize: 12, color: '#616161' },
+    tabTextActive: { color: '#000', fontWeight: '700' },
 
     dropdown: {
         position: 'absolute',
@@ -322,14 +273,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 8,
         elevation: 5,
-        shadowColor: '#000',
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
         padding: 5,
-        zIndex: 10
+        zIndex: 10,
     },
-    dropdownItem: {
-        padding: 10,
-        minWidth: 150
-    },
+
+    dropdownItem: { padding: 10, minWidth: 150 },
 });

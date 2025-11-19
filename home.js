@@ -19,6 +19,7 @@ export default function HomeScreen() {
             verMetas={() => navigation.navigate("VerMetas")}
             verGastos={() => navigation.navigate("VerGastos")}
             perfil={() => navigation.navigate("Perfil")}
+
         />
     );
 }

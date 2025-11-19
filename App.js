@@ -13,6 +13,7 @@ import RegistrarMeta from "./registrarMeta";
 import VerMetas from "./verMetas";
 import VerGastos from "./verGastos";
 import Perfil from "./perfil";
+import Dashboard from "./components/dashboard";
 
 const Stack = createNativeStackNavigator();
 
@@ -70,6 +71,11 @@ export default function App() {
             name="VerGastos"
             component={VerGastos}
             options={{ title: "Ver gastos" }}
+          />
+          <Stack.Screen
+            name="Dashboard"
+            component={Dashboard}
+            options={{ title: "Dashboard" }}
           />
         </>
       ) : (

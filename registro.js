@@ -35,7 +35,7 @@ const handleRegistro = async () => {
         await setDoc(doc(db, "users", user.uid), registro);
 
         Alert.alert("Registro exitoso", `Bienvenido, ${ name } !`);
-        navigation.navigate("Login"); // ir a login después del registro
+        navigation.replace("Dashboard"); // ir a login después del registro
     } catch (error) {
         if (error.code === "auth/email-already-in-use") {
             Alert.alert("Error", "El correo ya está en uso");
