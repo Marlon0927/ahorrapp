@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "./firebaseConfig";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db, auth } from "./firebaseConfig";
 
 export default function VerMetas() {
     const [goals, setGoals] = useState([]);
     const [loading, setLoading] = useState(true);
 
+
     useEffect(() => {
-        // 🔹 Escucha todos los documentos de la colección "goals"
-        const unsubscribe = onSnapshot(collection(db, "goals"), (snapshot) => {
+        // 🔹 Solo metas del usuario loggeado
+        const q = query(
+            collection(db, "goals"),
+            where("userId", "==", auth.currentUser.uid)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
@@ -58,19 +64,20 @@ export default function VerMetas() {
             />
         </View>
     );
+
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#fff",
-        padding: 20,
+        padding: 20
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
         textAlign: "center",
-        marginBottom: 20,
+        marginBottom: 20
     },
     card: {
         backgroundColor: "#f2f2f2",
@@ -78,29 +85,29 @@ const styles = StyleSheet.create({
         padding: 15,
         marginBottom: 10,
         borderLeftWidth: 5,
-        borderLeftColor: "#00b506",
+        borderLeftColor: "#00b506"
     },
     goalTitle: {
         fontSize: 18,
-        fontWeight: "bold",
+        fontWeight: "bold"
     },
     goalValue: {
         fontSize: 16,
         color: "#00b506",
-        marginTop: 5,
+        marginTop: 5
     },
     date: {
         fontSize: 14,
         color: "#555",
-        marginTop: 5,
+        marginTop: 5
     },
     centered: {
         flex: 1,
         justifyContent: "center",
-        alignItems: "center",
+        alignItems: "center"
     },
     emptyText: {
         color: "#999",
-        fontSize: 16,
+        fontSize: 16
     },
 });
