@@ -17,6 +17,8 @@ export default function HomeScreen() {
             onAddExpense={() => navigation.navigate("RegistrarGasto")}
             onAddGoal={() => navigation.navigate("RegistrarMeta")}
             verMetas={() => navigation.navigate("VerMetas")}
+            verGastos={() => navigation.navigate("VerGastos")}
+            perfil={() => navigation.navigate("Perfil")}
         />
     );
 }

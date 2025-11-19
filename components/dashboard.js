@@ -3,8 +3,11 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
 import VerMetas from "../verMetas";
+import VerGastos from "../verGastos";
+import Perfil from "../perfil";
 
-export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas}) {
+
+export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas, perfil, verGastos }) {
     const pieData = [
         { value: 43, color: "#FFA000", text: "43%" },
         { value: 24, color: "#1E88E5", text: "24%" },
@@ -35,7 +38,7 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas}
                 <View style={styles.headerRow}>
                     <Text style={styles.title}>Inicio</Text>
                     <TouchableOpacity onPress={onLogout} style={styles.dropBtn}>
-                        <Text style={styles.dropText}>DROP</Text>
+                        <Text style={styles.dropText}>Cerrar Sesión</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -97,7 +100,7 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas}
                 {/* Menú desplegable */}
                 {visible && (
                     <View style={styles.dropdown}>
-                        <TouchableOpacity style={styles.dropdownItem}>
+                        <TouchableOpacity style={styles.dropdownItem} onPress={perfil}>
                             <Text>Perfil</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.dropdownItem} onPress={onAddGoal}>
@@ -106,6 +109,10 @@ export default function Dashboard({ onLogout, onAddExpense, onAddGoal, verMetas}
                         <TouchableOpacity style={styles.dropdownItem} onPress={verMetas}>
                             <Text>Lista de metas</Text>
                         </TouchableOpacity>
+                        <TouchableOpacity style={styles.dropdownItem}onPress={verGastos}>
+                            <Text>Lista de gastos</Text>
+                        </TouchableOpacity>
+                        
                     </View>
                 )}
             </View>

@@ -1,127 +1,136 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Button } from "react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "./firebaseConfig";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth, db } from "./firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
-export default function Login({ navigation }) {
+export default function Registro({ navigation }) {
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleLogin = async () => {
-        if (!email || !password) {
-            Alert.alert("Error", "Por favor ingresa correo y contraseña");
-            return;
+
+const handleRegistro = async () => {
+    if (!name || !email || !password) {
+        Alert.alert("Error", "Por favor completa todos los campos");
+        return;
+    }
+
+    try {
+        // 1️⃣ Crear usuario con email y contraseña
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 2️⃣ Actualizar perfil con nombre
+        await updateProfile(user, { displayName: name });
+
+        // 3️⃣ Guardar datos en Firestore
+        const registro = {
+            uid: user.uid,
+            email: email,
+            name: name,
+            createdAt: new Date(),
+        };
+
+        await setDoc(doc(db, "users", user.uid), registro);
+
+        Alert.alert("Registro exitoso", `Bienvenido, ${ name } !`);
+        navigation.navigate("Login"); // ir a login después del registro
+    } catch (error) {
+        if (error.code === "auth/email-already-in-use") {
+            Alert.alert("Error", "El correo ya está en uso");
+        } else if (error.code === "auth/invalid-email") {
+            Alert.alert("Error", "Correo inválido");
+        } else if (error.code === "auth/weak-password") {
+            Alert.alert("Error", "La contraseña es muy débil");
+        } else {
+            Alert.alert("Error", error.message);
         }
+    }
+};
 
-        try {
-            // 1️⃣ Crear usuario con email y contraseña
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            console.log("prueba");
-
-            // 2️⃣ Agregar nombre al perfil
-            await updateProfile(user, { displayName: name });
-
-            // 3️⃣ Guardar en Firestore
-            const registro = {
-                uid: user.uid,         // guardar el uid del usuario
-                email: email,
-                name: name,
-                createdAt: new Date(), // opcional: fecha de registro
-            };
-
-            await setDoc(doc(db, "users", user.uid), registro); // guarda el documento
-
-            showAlert("Registro exitoso", `Bienvenido, ${name}!`);
-            navigation.navigate("Login"); // o a tu pantalla principal
-        } catch (error) {
-            if (error.code === "auth/user-not-found") Alert.alert("Usuario no encontrado");
-            else if (error.code === "auth/wrong-password") Alert.alert("Contraseña incorrecta");
-            else Alert.alert("Error", error.message);
-        }
-    };
-
-    return (
-        <View style={styles.container}>
-            <View style={styles.logoContainer}>
-                <Image source={require("./assets/logo.jpg")} style={styles.logo} />
-            </View>
-
-            <Text style={styles.title}>Iniciar Sesión</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Correo electrónico"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-
-            <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            <Button title="Ingresar"
-                onPress={handleLogin}
-                color="#00b506ff"
-            />
-
-             <View style={styles.footer}>
-                <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
-                    <Text style={styles.link}> ¿Olvidaste la contraseña?</Text>
-                </TouchableOpacity>
-            </View>
-            <View style={styles.footer}>
-                <Text>¿No tienes cuenta?</Text>
-                <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
-                    <Text style={styles.link}> Regístrate</Text>
-                </TouchableOpacity>
-            </View>
+return (
+    <View style={styles.container}>
+        <View style={styles.logoContainer}>
+            <Image source={require("./assets/logo.jpg")} style={styles.logo} />
         </View>
-    );
+
+        <Text style={styles.title}>Registro</Text>
+
+        <TextInput
+            style={styles.input}
+            placeholder="Nombre"
+            value={name}
+            onChangeText={setName}
+        />
+
+        <TextInput
+            style={styles.input}
+            placeholder="Correo electrónico"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+        />
+
+        <TextInput
+            style={styles.input}
+            placeholder="Contraseña"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+        />
+
+        <Button title="Registrarse" onPress={handleRegistro} color="#00b506ff" />
+
+        <View style={styles.footer}>
+            <Text>¿Ya tienes cuenta?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                <Text style={styles.link}> Inicia sesión</Text>
+            </TouchableOpacity>
+        </View>
+    </View>
+);
+
+
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: "center",
-        //alignItems: "center",
         padding: 30,
-        backgroundColor: "#ffffffff"
+        backgroundColor: "#fff",
     },
-     title: {
+    title: {
         fontSize: 24,
         fontWeight: "bold",
         textAlign: "center",
-        marginBottom: 20
+        marginBottom: 20,
     },
     input: {
         borderWidth: 1,
         borderColor: "#ccc",
         borderRadius: 8,
         padding: 10,
-        marginBottom: 10
+        marginBottom: 10,
     },
-     footer: {
+    footer: {
         flexDirection: "row",
         justifyContent: "center",
-        marginTop: 20
+        marginTop: 20,
     },
     link: {
-        color: "blue",
         fontWeight: "bold",
-        color: "#00b506ff"
+        color: "#00b506ff",
     },
     logoContainer: {
-        alignItems: "center",      // centra horizontalmente
-        justifyContent: "center",  // centra verticalmente
+        alignItems: "center",
+        justifyContent: "center",
         marginTop: 40,
     },
     logo: {
         width: 150,
-        height: 150
+        height: 150,
     },
 });
