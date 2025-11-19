@@ -50,7 +50,7 @@ export default function Login({ navigation }) {
                 color="#00b506ff"
             />
 
-             <View style={styles.footer}>
+            <View style={styles.footer}>
                 <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
                     <Text style={styles.link}> ¿Olvidaste la contraseña?</Text>
                 </TouchableOpacity>
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
         padding: 30,
         backgroundColor: "#ffffffff"
     },
-     title: {
+    title: {
         fontSize: 24,
         fontWeight: "bold",
         textAlign: "center",
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 10
     },
-     footer: {
+    footer: {
         flexDirection: "row",
         justifyContent: "center",
         marginTop: 20

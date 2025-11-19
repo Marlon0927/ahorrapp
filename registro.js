@@ -1,138 +1,111 @@
 import React, { useState } from "react";
-import { View, TextInput, Button, Text, StyleSheet, Alert, Platform, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Button } from "react-native";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore"
 import { auth, db } from "./firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
-export default function RegisterScreen({ navigation }) {
+export default function Registro({ navigation }) {
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
-    const [showConditions, setShowConditions] = useState(false);
 
-    function showAlert(title, message) {
-        if (Platform.OS === "web") {
-            window.alert(`${title}\n\n${message}`);
+
+const handleRegistro = async () => {
+    if (!name || !email || !password) {
+        Alert.alert("Error", "Por favor completa todos los campos");
+        return;
+    }
+
+    try {
+        // 1️⃣ Crear usuario con email y contraseña
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 2️⃣ Actualizar perfil con nombre
+        await updateProfile(user, { displayName: name });
+
+        // 3️⃣ Guardar datos en Firestore
+        const registro = {
+            uid: user.uid,
+            email: email,
+            name: name,
+            createdAt: new Date(),
+        };
+
+        await setDoc(doc(db, "users", user.uid), registro);
+
+        Alert.alert("Registro exitoso", `Bienvenido, ${ name } !`);
+        navigation.replace("Dashboard"); // ir a login después del registro
+    } catch (error) {
+        if (error.code === "auth/email-already-in-use") {
+            Alert.alert("Error", "El correo ya está en uso");
+        } else if (error.code === "auth/invalid-email") {
+            Alert.alert("Error", "Correo inválido");
+        } else if (error.code === "auth/weak-password") {
+            Alert.alert("Error", "La contraseña es muy débil");
         } else {
-            Alert.alert(title, message);
+            Alert.alert("Error", error.message);
         }
     }
-    const validarPassword = (password) => {
-        const regex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,12}$/;
-        return regex.test(password);
-    };
+};
 
-    const handleRegister = async () => {
-        if (!email || !password || !name) {
-            showAlert("Error", "Por favor completa todos los campos");
-            return;
-        }
-
-        if (!validarPassword(password)) {
-            showAlert(
-                "Contraseña inválida",
-                "Debe tener entre 6 y 12 caracteres, al menos una mayúscula y un número."
-            );
-            return;
-        }
-
-        try {
-            // 1️⃣ Crear usuario con email y contraseña
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            console.log("prueba");
-
-            // 2️⃣ Agregar nombre al perfil
-            await updateProfile(user, { displayName: name });
-
-            // 3️⃣ Guardar en Firestore
-            const registro = {
-                uid: user.uid,         // guardar el uid del usuario
-                email: email,
-                name: name,
-                createdAt: new Date(), // opcional: fecha de registro
-            };
-
-            await setDoc(doc(db, "users", user.uid), registro); // guarda el documento
-
-            showAlert("Registro exitoso", `Bienvenido, ${name}!`);
-            navigation.navigate("Login"); // o a tu pantalla principal
-        } catch (error) {
-            console.error(error);
-            let mensajeError = "Ocurrió un error al registrarte";
-
-            if (error.code === "auth/email-already-in-use") {
-                mensajeError = "El correo ya está registrado";
-            } else if (error.code === "auth/invalid-email") {
-                mensajeError = "El formato del correo es inválido";
-            } else if (error.code === "auth/weak-password") {
-                mensajeError = "La contraseña es muy débil (mínimo 6 caracteres)";
-            }
-
-            showAlert("Error", mensajeError);
-        }
-    };
-
-    return (
-        <View style={styles.container}>
-            <View style={styles.logoContainer}>
-                <Image source={require("./assets/logo.jpg")} style={styles.logo} />
-            </View>
-            <Text style={styles.title}>Crear Cuenta</Text>
-            <Text style={styles.subtitle}>Nombre</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Nombre"
-                value={name}
-                onChangeText={setName}
-            />
-            <Text style={styles.subtitle}>Email</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Correo electrónico"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-            />
-            <Text style={styles.subtitle}>Contraseña</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                onFocus={() => setShowConditions(true)}   // 👈 cuando hace foco
-                onBlur={() => setShowConditions(false)}   // 👈 cuando sale del campo
-            />
-            {showConditions && (
-                <View style={styles.conditionsBox}>
-                    <Text style={styles.condition}>• Mínimo 6 caracteres, máximo 12.</Text>
-                    <Text style={styles.condition}>• Al menos una mayúscula</Text>
-                    <Text style={styles.condition}>• Al menos un número</Text>
-                </View>
-            )}
-            <Button title="Registrarme" onPress={handleRegister} color="#00b506ff" />
+return (
+    <View style={styles.container}>
+        <View style={styles.logoContainer}>
+            <Image source={require("./assets/logo.jpg")} style={styles.logo} />
         </View>
-    );
+
+        <Text style={styles.title}>Registro</Text>
+
+        <TextInput
+            style={styles.input}
+            placeholder="Nombre"
+            value={name}
+            onChangeText={setName}
+        />
+
+        <TextInput
+            style={styles.input}
+            placeholder="Correo electrónico"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+        />
+
+        <TextInput
+            style={styles.input}
+            placeholder="Contraseña"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+        />
+
+        <Button title="Registrarse" onPress={handleRegistro} color="#00b506ff" />
+
+        <View style={styles.footer}>
+            <Text>¿Ya tienes cuenta?</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+                <Text style={styles.link}> Inicia sesión</Text>
+            </TouchableOpacity>
+        </View>
+    </View>
+);
+
+
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: "center",
-        padding: 20,
-        backgroundColor: "#ffffffff"
+        padding: 30,
+        backgroundColor: "#fff",
     },
     title: {
         fontSize: 24,
         fontWeight: "bold",
         textAlign: "center",
-        marginBottom: 20,
-    },
-    subtitle: {
-        fontSize: 18,
-        fontWeight: "bold",
-        textAlign: "left",
         marginBottom: 20,
     },
     input: {
@@ -142,13 +115,22 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 10,
     },
+    footer: {
+        flexDirection: "row",
+        justifyContent: "center",
+        marginTop: 20,
+    },
+    link: {
+        fontWeight: "bold",
+        color: "#00b506ff",
+    },
     logoContainer: {
-        alignItems: "center",      // centra horizontalmente
-        justifyContent: "center",  // centra verticalmente
+        alignItems: "center",
+        justifyContent: "center",
         marginTop: 40,
     },
     logo: {
         width: 150,
-        height: 150
+        height: 150,
     },
 });
